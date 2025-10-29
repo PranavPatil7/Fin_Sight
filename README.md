@@ -57,7 +57,6 @@ The project directory is organised as follows:
 
 The application is deployed on Railway. Railway provides a simple way to deploy, manage, and scale web applications with minimal configuration. The necessary configuration files (`Procfile`, `runtime.txt`) and environment variables are set up in the Railway project settings.
 
-- [Deployed Chatbot](https://web-production-318a.up.railway.app/)
 
 
 
