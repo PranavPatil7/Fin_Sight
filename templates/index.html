@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finbot</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>
+                <img src="https://cdn-icons-png.flaticon.com/512/2593/2593627.png" alt="Finbot Icon" class="icon">
+                Finbot
+            </h1>
+            <p class="description">AI-powered chatbot for analysing corporate financials from 10-K and 10-Q reports</p>
+        </div>
+        <div class="chatbox" id="chatbox">
+            <div class="message message-bot">
+                <div class="message-content">
+                    Welcome to Finbot! Upload a PDF to start.
+                </div>
+            </div>
+        </div>
+        <div class="input-section">
+            <form id="uploadForm" enctype="multipart/form-data" class="input-form" onsubmit="return false;">
+                <label for="fileInput" class="custom-file-upload">
+                    <i class="fas fa-paperclip clip-icon"></i>
+                </label>
+                <input type="file" name="file" id="fileInput" style="display: none;">
+                <input type="text" id="queryInput" placeholder="Ask a question..." class="query-input">
+                <button id="queryButton" class="btn">Send</button>
+                <button id="resetButton" class="btn icon-btn" title="Restart Chat">
+                    <i class="fas fa-redo"></i>
+                </button>
+            </form>
+            <div id="progressWrapper">
+                <progress id="progressBar" value="0" max="100"></progress>
+                <span id="processingText">Processing...</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer-links">
+        <a href="https://www.sec.gov/Archives/edgar/data/789019/000095017024087843/msft-20240630.htm" target="_blank">Sample Microsoft 10-K Report</a>
+        |
+        <a href="https://www.sec.gov/search-filings" target="_blank">Search for 10K & 10Q docs</a>
+        |
+        <a href="https://github.com/deepakb41/Finbot" target="_blank">GitHub Repository</a>
+    </div>
+    
+
+    <script>
+        document.getElementById('fileInput').addEventListener('change', function(event) {
+            event.preventDefault(); // Prevent default form submission behavior
+
+            var formData = new FormData();
+            var fileInput = document.getElementById('fileInput');
+            formData.append('file', fileInput.files[0]);
+
+            document.getElementById('progressWrapper').style.display = 'inline-flex';
+            appendMessage('bot', 'Uploading and processing the PDF...');
+
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', '/upload', true);
+
+            xhr.upload.onprogress = function(event) {
+                if (event.lengthComputable) {
+                    var percentComplete = (event.loaded / event.total) * 70;
+                    document.getElementById('progressBar').value = percentComplete;
+                }
+            };
+
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    var data = JSON.parse(xhr.responseText);
+                    if (data.status === 'success') {
+                        let processingProgress = 70;
+                        let processingInterval = setInterval(function() {
+                            processingProgress += 2;
+                            document.getElementById('progressBar').value = processingProgress;
+                            if (processingProgress >= 100) {
+                                clearInterval(processingInterval);
+                                appendMessage('bot', data.message);
+                                document.getElementById('progressWrapper').style.display = 'none';
+                            }
+                        }, 100);
+                    } else {
+                        appendMessage('bot', 'Failed to upload file. Please try again.');
+                        document.getElementById('progressWrapper').style.display = 'none';
+                    }
+                } else {
+                    appendMessage('bot', 'Error occurred: ' + xhr.statusText);
+                    document.getElementById('progressWrapper').style.display = 'none';
+                }
+            };
+
+            xhr.send(formData);
+        });
+
+        document.getElementById('queryButton').addEventListener('click', function(event) {
+            event.preventDefault(); // Prevent default form submission behavior
+
+            var queryInput = document.getElementById('queryInput');
+            var query = queryInput.value;
+            queryInput.value = '';
+
+            appendMessage('user', query);
+
+            fetch('/query', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ query: query })
+            }).then(response => response.json())
+              .then(data => {
+                  appendMessage('bot', data.response);
+              }).catch(error => {
+                  appendMessage('bot', 'Error occurred: ' + error.message);
+              });
+        });
+
+        document.getElementById('resetButton').addEventListener('click', function(event) {
+            event.preventDefault(); // Prevent default form submission behavior
+
+            fetch('/reset', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }).then(response => response.json())
+              .then(data => {
+                  if (data.status === 'success') {
+                      document.getElementById('chatbox').innerHTML = ''; 
+                      appendMessage('bot', 'Welcome back to Finbot! Upload a PDF to start.');
+                  } else {
+                      appendMessage('bot', 'Failed to reset. Please try again.');
+                  }
+              }).catch(error => {
+                  appendMessage('bot', 'Error occurred: ' + error.message);
+              });
+        });
+
+        function appendMessage(sender, message) {
+            var chatbox = document.getElementById('chatbox');
+            var messageDiv = document.createElement('div');
+            messageDiv.classList.add('message', `message-${sender}`);
+            var messageContent = document.createElement('div');
+            messageContent.classList.add('message-content');
+            messageContent.innerText = message;
+            messageDiv.appendChild(messageContent);
+            chatbox.appendChild(messageDiv);
+            chatbox.scrollTop = chatbox.scrollHeight;
+        }
+    </script>
+</body>
+</html>
