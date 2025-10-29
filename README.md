@@ -1,6 +1,5 @@
-# BankBot AI - Multi Agent Banking Assitant
-
-BankBot AI is a tool for analysing and extracting information from complex financial documents. By leveraging LangChain, OpenAI embeddings, and Faiss indexing, Finbot provides users with a robust solution for querying financial data. The integration of Retrieval-Augmented Generation ensures that the answers are both relevant and contextually accurate, making Finbot an invaluable asset for financial analysts, investors, and other stakeholders.
+# Fin Sight - Finacial Document Chatbot
+Fin Sight is a tool for analysing and extracting information from complex financial documents. By leveraging LangChain, OpenAI embeddings, and Faiss indexing, Finbot provides users with a robust solution for querying financial data. The integration of Retrieval-Augmented Generation ensures that the answers are both relevant and contextually accurate, making Finbot an invaluable asset for financial analysts, investors, and other stakeholders.
 
 
 
